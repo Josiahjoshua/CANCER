@@ -6,6 +6,8 @@ from django.conf import settings
 from django.shortcuts import render, redirect
 from .forms import UploadFileForm
 from django.core.files.storage import default_storage
+from django.http import JsonResponse
+from .utils import handle_uploaded_file, process_and_predict
 
 # Load your trained model
 model = tf.keras.models.load_model('path/to/my/trained_model.h5')
@@ -30,6 +32,19 @@ def process_and_predict(filepath):
     return result
 
 def upload_file(request):
+    if request.method == 'POST':
+        form = UploadFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            file_path = handle_uploaded_file(request.FILES['file'])
+            prediction = process_and_predict(file_path)
+            
+            if request.is_ajax():
+                return JsonResponse({'prediction': prediction})
+            else:
+                return render(request, 'breast_cancer_app/result.html', {'prediction': prediction})
+    else:
+        form = UploadFileForm()
+    return render(request, 'breast_cancer_app/upload.html', {'form': form})
     if request.method == 'POST':
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():

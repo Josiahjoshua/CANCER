@@ -27,7 +27,7 @@
                 </div>
             </div>
 
-            <!-- admitted card -->
+            <!-- Admitted Card -->
             <div class="col-xl-4 col-md-6 col-sm-12 mb-4">
                 <div class="card border-left-info shadow h-100 py-2">
                     <div class="card-body">
@@ -45,7 +45,7 @@
                 </div>
             </div>
 
-            <!-- dead Card  -->
+            <!-- Deceased Card -->
             <div class="col-xl-4 col-md-6 col-sm-12 mb-4">
                 <div class="card border-left-danger shadow h-100 py-2">
                     <div class="card-body">
@@ -53,11 +53,7 @@
                             <div class="col mr-2">
                                 <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Deceased
                                 </div>
-                                <div class="row no-gutters align-items-center">
-                                    <div class="col-auto">
-                                        <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">{{deceased_count}}</div>
-                                    </div>
-                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ deceased_count }}</div>
                             </div>
                             <div class="col-auto">
                                 <i class="fas fa-book-dead fa-2x text-gray-300"></i>
@@ -85,15 +81,18 @@
                 </div>
             </div>
 
-            <!-- bed availability -->
+            <!-- Bed Availability Card -->
             <div class="col-xl-4 col-md-6 col-sm-12 mb-4">
                 <div class="card border-left-primary shadow h-100 py-2">
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-blue text-uppercase mb-1">
-                                    Bed availability</div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{beds_available}}</div>
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                    Bed Availability</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ beds_available }}</div>
+                                <div class="progress progress-sm mt-2">
+                                    <div class="progress-bar bg-primary" role="progressbar" style="width: {{ beds_available|div:total_beds|floatformat:2 }}%" aria-valuenow="{{ beds_available }}" aria-valuemin="0" aria-valuemax="{{ total_beds }}"></div>
+                                </div>
                             </div>
                             <div class="col-auto">
                                 <i class="fas fa-bed fa-2x text-gray-300"></i>
@@ -103,14 +102,18 @@
                 </div>
             </div>
 
+            <!-- Ventilator Availability Card -->
             <div class="col-xl-4 col-md-6 col-sm-12 mb-4">
                 <div class="card border-left-primary shadow h-100 py-2">
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-blue text-uppercase mb-1">
-                                    ventilator availability</div>
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                    Ventilator Availability</div>
                                 <div class="h5 mb-0 font-weight-bold text-gray-800">160</div>
+                                <div class="progress progress-sm mt-2">
+                                    <div class="progress-bar bg-primary" role="progressbar" style="width: {{ ventilators_available|div:total_ventilators|floatformat:2 }}%" aria-valuenow="160" aria-valuemin="0" aria-valuemax="total_ventilators"></div>
+                                </div>
                             </div>
                             <div class="col-auto">
                                 <i class="fas fa-ambulance fa-2x text-gray-300"></i>
@@ -121,27 +124,21 @@
             </div>
         </div>
 
-        <div><h3 class="font-weight-bold my-3">Beds availability</h3></div>
+        <h3 class="font-weight-bold my-3">Beds Availability</h3>
         <div class="row">
-            <!-- .bg-success.grid-box.my-2.mx-2  -->
-            {% comment %} <div class="bg-success grid-box my-2 mx-2 py-3 px-3"> {% endcomment %}
-            {% comment %} </div> {% endcomment %}
-
             {% for bed in beds %}
                 <div class="
-                
-                
-                {% if bed.occupied == True %}
+                {% if bed.occupied %}
                 bg-danger 
-                {% elif bed.occupied == False %}
+                {% else %}
                 bg-success
                 {% endif %}
-                
-                
-                grid-box my-2 mx-2 py-3 px-3 text-white">{{ bed }}</div>
+                grid-box my-2 mx-2 py-3 px-3 text-white text-center">{{ bed.number }}</div>
             {% endfor %}
-            
         </div>
     </div>
 
+    <!-- Add FontAwesome and any additional scripts -->
+    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
+    
 {% endblock content %}
