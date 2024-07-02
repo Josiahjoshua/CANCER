@@ -10,7 +10,7 @@ from django.http import JsonResponse
 from .utils import handle_uploaded_file, process_and_predict
 
 # Load your trained model
-model = tf.keras.models.load_model('path/to/my/trained_model.h5')
+# model = tf.keras.models.load_model('path/to/my/trained_model.h5')
 
 def handle_uploaded_file(f):
     file_path = os.path.join(settings.MEDIA_ROOT, f.name)

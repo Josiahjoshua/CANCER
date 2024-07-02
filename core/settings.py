@@ -16,6 +16,7 @@ from pathlib import Path
 from django.contrib.messages import constants as messages
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
 
 # Quick-start development settings - unsuitable for production
@@ -91,7 +92,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'ocean',
-        'USER': 'OCRI',
+        'USER': 'root',
         'PASSWORD': '',
         'HOST': 'localhost',
         'PORT': '3306',
