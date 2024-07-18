@@ -9,3 +9,7 @@ Beyond patient management, the platform addresses various aspects of hospital op
 To tackle the pandemic effectively, the platform also provides crucial information such as hospital capacity, including ICU availability and ventilator status. Staffing levels are monitored, highlighting any shortages that need attention. Real-time tracking of confirmed and suspected COVID-19 cases entering the hospital allows for immediate response and resource planning.
 
 Overall, the project equips public health officials with comprehensive and actionable data to efficiently coordinate COVID-19 responses. By combining a user-friendly interface with dynamic updates, it empowers healthcare facilities to manage patient care effectively during these challenging times.
+
+
+User:Nkya
+Passkey:nkya1234

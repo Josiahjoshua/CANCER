@@ -45,12 +45,3 @@ def upload_file(request):
     else:
         form = UploadFileForm()
     return render(request, 'breast_cancer_app/upload.html', {'form': form})
-    if request.method == 'POST':
-        form = UploadFileForm(request.POST, request.FILES)
-        if form.is_valid():
-            file_path = handle_uploaded_file(request.FILES['file'])
-            prediction = process_and_predict(file_path)
-            return render(request, 'breast_cancer_app/result.html', {'prediction': prediction})
-    else:
-        form = UploadFileForm()
-    return render(request, 'breast_cancer_app/upload.html', {'form': form})

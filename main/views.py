@@ -1,3 +1,13 @@
+import os
+import pydicom
+import numpy as np
+import tensorflow as tf
+from django.conf import settings
+from .forms import UploadFileForm
+from django.core.files.storage import default_storage
+from django.http import JsonResponse
+from .utils import handle_uploaded_file, process_and_predict
+
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, JsonResponse
 from .models import Patient, Bed, Doctor
@@ -7,7 +17,42 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 # PatientFilter = OrderFilter
 
-# Create your vie
+# Load your trained model
+# model = tf.keras.models.load_model('path/to/my/trained_model.h5')
+
+def handle_uploaded_file(f):
+    file_path = os.path.join(settings.MEDIA_ROOT, f.name)
+    with open(file_path, 'wb+') as destination:
+        for chunk in f.chunks():
+            destination.write(chunk)
+    return file_path
+
+def process_and_predict(filepath):
+    # Load and preprocess the DICOM file
+    ds = pydicom.dcmread(filepath)
+    image = ds.pixel_array
+    image = np.expand_dims(image, axis=-1)  # Expand dimensions if needed
+    image = np.expand_dims(image, axis=0)  # Model expects a batch dimension
+    # Make prediction
+    prediction = model.predict(image)
+    # Post-process prediction if necessary (e.g., thresholding, etc.)
+    result = 'Cancer' if prediction[0][0] > 0.5 else 'No Cancer'
+    return result
+
+def upload_file(request):
+    if request.method == 'POST':
+        form = UploadFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            file_path = handle_uploaded_file(request.FILES['file'])
+            prediction = process_and_predict(file_path)
+            
+            if request.is_ajax():
+                return JsonResponse({'prediction': prediction})
+            else:
+                return render(request, 'main/model.html', {'prediction': prediction})
+    else:
+        form = UploadFileForm()
+    return render(request, 'main/model.html', {'form': form})
 
 def login(request):
     if request.user.is_authenticated:
@@ -44,12 +89,19 @@ def dashboard(request):
     recovered_count = patients_recovered.count()
     beds = Bed.objects.all()
     beds_available = Bed.objects.filter(occupied=False).count()
+    ventilators_available = 60  # Example value
+    total_ventilators = 100
+
+    ventilator_percentage = (ventilators_available / total_ventilators) * 100
     context = {
         'patient_count': patient_count,
         'recovered_count': recovered_count,
         'beds_available': beds_available,
         'deceased_count':deceased_count,
-        'beds':beds
+        'beds':beds,
+        'ventilators_available': ventilators_available,
+        'total_ventilators': total_ventilators,
+        'ventilator_percentage': ventilator_percentage,
     }
     print(patient_count)
     return render(request, 'main/dashboard.html', context)
@@ -184,3 +236,21 @@ def upload(request):
     return render(request, "main/upload.html")
     #itakaa logic ya kufanya image inayokuwa uploaded iwe katika certain preferences such
     #black and white na pia size ya image itakayokuwa uploaded
+
+def dashboard_view(request):
+    beds_available = 50  # Replace with actual data retrieval
+    total_beds = 100     # Replace with actual data retrieval
+
+    if total_beds != 0:
+        bed_percentage = (beds_available / total_beds) * 100
+    else:
+        bed_percentage = 0
+
+    context = {
+        'beds_available': beds_available,
+        'total_beds': total_beds,
+        'bed_percentage': bed_percentage,
+    }
+
+    return render(request, 'main/dashboard.html', context)
+
