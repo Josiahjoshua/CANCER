@@ -41,15 +41,22 @@
       text-decoration: none;
       cursor: pointer;
     }
+
+    /* Loading Indicator */
+    #loading {
+      display: none;
+    }
   </style>
 </head>
 <body>
   <h1>Upload Image</h1>
-  <form method="post" enctype="multipart/form-data">
+  <!-- <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {{ form.as_p }}
     <button type="submit">Upload</button>
-  </form>
+  </form> -->
+
+  <div id="loading">Loading...</div>
 
   <!-- The Modal -->
   <div id="myModal" class="modal">
@@ -72,6 +79,7 @@
     function openModal(prediction) {
       document.getElementById("prediction-result").innerText = prediction;
       modal.style.display = "block";
+      document.getElementById("loading").style.display = "none";
     }
 
     // When the user clicks on <span> (x), close the modal
@@ -90,6 +98,7 @@
       e.preventDefault(); // Prevent the default form submission
 
       var formData = new FormData(this);
+      document.getElementById("loading").style.display = "block";
 
       fetch("{% url 'upload_file' %}", {
         method: 'POST',
@@ -100,9 +109,16 @@
       })
       .then(response => response.json())
       .then(data => {
-        openModal(data.prediction);
+        if (data.error) {
+          openModal(data.error);
+        } else {
+          openModal(data.prediction);
+        }
       })
-      .catch(error => console.error('Error:', error));
+      .catch(error => {
+        console.error('Error:', error);
+        openModal('An error occurred during file upload.');
+      });
     });
   </script>
 </body>
