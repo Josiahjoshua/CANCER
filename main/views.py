@@ -4,9 +4,10 @@ import pydicom
 import numpy as np
 import tensorflow as tf
 from django.conf import settings
-from .forms import UploadFileFormModel
+from .forms import UploadFileForm
 from django.core.files.storage import default_storage
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from .utils import handle_uploaded_file, process_and_predict
 
 from django.shortcuts import render, redirect
@@ -16,9 +17,10 @@ from .filters import PatientFilter
 from django.contrib.auth.models import User, auth
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from . import AI_Model
 # PatientFilter = OrderFilter
 
-model = tf.keras.models.load_model("E:/JOSIAH/AfyaAI_model.h5")
+# model = tf.keras.models.load_model("E:/JOSIAH/AfyaAI_model.h5")
 
 def handle_uploaded_file(f):
     file_path = os.path.join(settings.MEDIA_ROOT, f.name)
@@ -27,45 +29,125 @@ def handle_uploaded_file(f):
             destination.write(chunk)
     return file_path
 
-def process_and_predict(filepath):
+def process_dicom_image(file_path):
     try:
-        # Load and preprocess the DICOM file
-        ds = pydicom.dcmread(filepath)
+        ds = pydicom.dcmread(file_path)
         image = ds.pixel_array
-        image = cv2.resize(image, (50, 50))  # Resize to target size
-        image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)  # Convert to 3 channels
-        image = image / 255.0  # Normalize pixel values
-        image = np.expand_dims(image, axis=0)  # Model expects a batch dimension
-
-        # Make prediction
-        prediction = model.predict(image)
-        result = 'Cancer' if prediction[0][0] > 0.5 else 'No Cancer'
-        return result
+        
+        # Normalize pixel values
+        image = (image - np.min(image)) / (np.max(image) - np.min(image))
+        image = (image * 255).astype(np.uint8)
+        
+        # Resize and convert to RGB
+        image = cv2.resize(image, (224, 224))  # Adjust size as needed
+        image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+        
+        # Normalize for model input
+        image = image / 255.0
+        
+        return image
     except Exception as e:
-        return f"Error processing the image: {str(e)}"
+        print(f"Error processing DICOM image: {str(e)}")
+        return None
 
-def upload_file(request):
+@csrf_exempt
+def upload_and_predict(request):
     if request.method == 'POST':
-        form = UploadFileFormModel(request.POST, request.FILES)
+        form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
             file = request.FILES['file']
-            if not file.name.endswith('.dcm'):
+            
+            if not file.name.lower().endswith('.dcm'):
                 error_message = 'Invalid file format. Please upload a DICOM file.'
-                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                    return JsonResponse({'error': error_message})
-                else:
-                    return render(request, 'breast_cancer_app/result.html', {'error': error_message})
+                return JsonResponse({'error': error_message}, status=400)
 
             file_path = handle_uploaded_file(file)
-            prediction = process_and_predict(file_path)
+            img_array = process_dicom_image(file_path)
             
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({'prediction': prediction})
-            else:
-                return render(request, 'breast_cancer_app/result.html', {'prediction': prediction})
+            if img_array is None:
+                return JsonResponse({'error': 'Error processing the DICOM image'}, status=400)
+
+            # Make prediction using your model
+            predictions = AI_Model.predict(np.expand_dims(img_array, axis=0))
+            
+            cancer_probability = predictions[0][0]
+            predicted_class = "Cancer" if cancer_probability >= 0.5 else "Normal"
+            
+            # Implement get_calcification_type based on your model's output
+            calcification_type = get_calcification_type(predictions)
+            
+            # Clean up the uploaded file
+            os.remove(file_path)
+            
+            return JsonResponse({
+                'predicted_class': predicted_class,
+                'cancer_probability': float(cancer_probability),
+                'calcification_type': calcification_type
+            })
+        else:
+            return JsonResponse({'error': 'Invalid form submission'}, status=400)
     else:
         form = UploadFileForm()
-    return render(request, 'breast_cancer_app/upload.html', {'form': form})
+    
+    return render(request, 'main/patient.html', {'form': form})
+
+def get_calcification_type(predictions):
+    # Provided calcification types dictionary
+    calcification_types = {
+        0: 'No Calcification',
+        1: 'PLEOMORPHIC',
+        2: 'AMORPHOUS',
+        3: 'PUNCTATE',
+        4: 'LUCENT_CENTER',
+        5: 'VASCULAR',
+        6: 'FINE_LINEAR_BRANCHING',
+        7: 'COARSE',
+        8: 'ROUND_AND_REGULAR-LUCENT_CENTER',
+        9: 'PLEOMORPHIC-FINE_LINEAR_BRANCHING',
+        10: 'ROUND_AND_REGULAR-LUCENT_CENTER-PUNCTATE',
+        11: 'ROUND_AND_REGULAR-EGGSHELL',
+        12: 'PUNCTATE-PLEOMORPHIC',
+        13: 'DYSTROPHIC',
+        14: 'LUCENT_CENTERED',
+        15: 'ROUND_AND_REGULAR-LUCENT_CENTER-DYSTROPHIC',
+        16: 'ROUND_AND_REGULAR',
+        17: 'ROUND_AND_REGULAR-LUCENT_CENTERED',
+        18: 'AMORPHOUS-PLEOMORPHIC',
+        19: 'LARGE_RODLIKE-ROUND_AND_REGULAR',
+        20: 'PUNCTATE-AMORPHOUS',
+        21: 'COARSE-ROUND_AND_REGULAR-LUCENT_CENTER',
+        22: 'VASCULAR-COARSE-LUCENT_CENTERED',
+        23: 'LUCENT_CENTER-PUNCTATE',
+        24: 'ROUND_AND_REGULAR-PLEOMORPHIC',
+        25: 'EGGSHELL',
+        26: 'PUNCTATE-FINE_LINEAR_BRANCHING',
+        27: 'VASCULAR-COARSE',
+        28: 'ROUND_AND_REGULAR-PUNCTATE',
+        29: 'SKIN-PUNCTATE-ROUND_AND_REGULAR',
+        30: 'SKIN-PUNCTATE',
+        31: 'COARSE-ROUND_AND_REGULAR-LUCENT_CENTERED',
+        32: 'PUNCTATE-ROUND_AND_REGULAR',
+        33: 'LARGE_RODLIKE',
+        34: 'AMORPHOUS-ROUND_AND_REGULAR',
+        35: 'PUNCTATE-LUCENT_CENTER',
+        36: 'SKIN',
+        37: 'VASCULAR-COARSE-LUCENT_CENTER-ROUND_AND_REGULA',
+        38: 'COARSE-PLEOMORPHIC',
+        39: 'ROUND_AND_REGULAR-PUNCTATE-AMORPHOUS',
+        40: 'COARSE-LUCENT_CENTER',
+        41: 'MILK_OF_CALCIUM',
+        42: 'COARSE-ROUND_AND_REGULAR',
+        43: 'SKIN-COARSE-ROUND_AND_REGULAR',
+        44: 'ROUND_AND_REGULAR-AMORPHOUS',
+        45: 'PLEOMORPHIC-PLEOMORPHIC'
+    }
+    
+    # Assuming predictions[0] contains the model's output probabilities
+    # Find the index of the highest probability
+    calcification_index = np.argmax(predictions[0][1:])
+    
+    # Return the corresponding calcification type from the dictionary
+    return calcification_types.get(calcification_index, 'Unknown Calcification Type')
 
 def login(request):
     if request.user.is_authenticated:

@@ -120,11 +120,9 @@
 					<div class="col-md-6">
 						<div class="col-md-6 mx-auto">
 							<br />
-							<a id="upModal">
-								<i class="fa glyphicon glyphicon-ok-sign "></i>
-								<h5>Upload To Model</h5>
-							</a>
-
+							<button id="uploadModal" class="btn btn-primary">
+								<i class="fa fa-upload"></i> Upload DICOM for Analysis
+							</button>
 						</div>
 					</div>
 
@@ -152,102 +150,131 @@
 		</div>
 
 		<!-- The Modal -->
-		<div id="myModal" class="modal">
+		<!-- <div id="myModal" class="modal">
 			<div class="modal-content">
 				<span class="close">&times;</span>
 				<h2>Prediction Result</h2>
 				<p id="prediction-result"></p>
-				<a href="{% url 'upload_file' %}">Upload another image</a>
+				<a href="{% url 'upload_and_predict' %}">Upload another image</a>
 			</div>
-		</div>
+		</div> -->
 
-		<!-- The Modal -->
-		<div id="myModal1" class="modal">
-			<div class="modal-content">
-				<span class="close">&times;</span>
-				<h2>Upload Image</h2>
-				<form method="post" enctype="multipart/form-data">
-					{% csrf_token %}
-					{{ form.as_p }}
-					<button type="submit">Upload</button>
-				</form>
+<!-- Upload Modal -->
+<div id="uploadModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Upload DICOM for Analysis</h2>
+        <form id="uploadForm" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-success">Analyze</button>
+        </form>
+        <div id="loading" style="display: none;">Analyzing image...</div>
+    </div>
+</div>
 
-				<div id="loading">Loading...</div>
-			</div>
-		</div>
+<!-- Results Modal -->
+<div id="resultsModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Analysis Results</h2>
+        <div id="resultsContent">
+            <p><strong>Predicted Class: </strong><span id="predictedClass"></span></p>
+            <p><strong>Probability of Cancer: </strong><span id="cancerProbability"></span></p>
+            <p><strong>Calcification Type: </strong><span id="calcificationType"></span></p>
+        </div>
+    </div>
+</div>
 
-		<script>
-			// Get the modal
-			var modal1 = document.getElementById("myModal1");
-			var modal = document.getElementById("myModal");
+<script>
+    // JavaScript to handle modal functionality and AJAX upload
+    const uploadBtn = document.getElementById('uploadBtn');
+    const uploadModal = document.getElementById('uploadModal');
+    const resultsModal = document.getElementById('resultsModal');
+    const uploadForm = document.getElementById('uploadForm');
+    const loading = document.getElementById('loading');
 
-			// Get the <span> element that closes the modal
-			var span1 = document.getElementsByClassName("close")[0];
-			var span = document.getElementsByClassName("close")[0];
+    uploadBtn.onclick = () => uploadModal.style.display = "block";
 
-			// Function to open the modal
-			function openModal(prediction) {
-				document.getElementById("prediction-result").innerText = prediction;
-				modal1.style.display = "none";
-				modal.style.display = "block";
-				document.getElementById("loading").style.display = "none";
-			}
+    document.querySelectorAll('.close').forEach(closeBtn => {
+        closeBtn.onclick = function() {
+            this.closest('.modal').style.display = "none";
+        }
+    });
 
-			// When the user clicks on <span> (x), close the modal
-			span1.onclick = function () {
-				modal1.style.display = "none";
-			}
+    window.onclick = (event) => {
+        if (event.target.classList.contains('modal')) {
+            event.target.style.display = "none";
+        }
+    };
 
-			// When the user clicks on <span> (x), close the modal
-			span.onclick = function () {
-				modal.style.display = "none";
-			}
+    uploadForm.onsubmit = function(e) {
+        e.preventDefault();
+        loading.style.display = "block";
+        
+        fetch("{% url 'upload_and_predict' %}", {
+            method: 'POST',
+            body: new FormData(this),
+        })
+        .then(response => response.json())
+        .then(data => {
+            loading.style.display = "none";
+            uploadModal.style.display = "none";
+            
+            if (data.error) {
+                alert(data.error);
+            } else {
+                document.getElementById('predictedClass').textContent = data.predicted_class;
+                document.getElementById('cancerProbability').textContent = (data.cancer_probability * 100).toFixed(2) + '%';
+                document.getElementById('calcificationType').textContent = data.calcification_type;
+                
+                resultsModal.style.display = "block";
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            loading.style.display = "none";
+            alert('An error occurred during analysis.');
+        });
+    };
+</script>
 
-			// When the user clicks anywhere outside of the modal, close it
-			window.onclick = function (event) {
-				if (event.target == modal1) {
-					modal1.style.display = "none";
-				}
-			}
+<style>
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.4);
+    }
 
-			// When the user clicks anywhere outside of the modal, close it
-			window.onclick = function (event) {
-				if (event.target == modal) {
-					modal.style.display = "none";
-				}
-			}
+    .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 500px;
+    }
 
-			document.querySelector('#upModal').addEventListener('click', function (e) {
-				modal1.style.display = "block";
-				document.getElementById("loading").style.display = "none";
-			});
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
 
-			document.querySelector('form').addEventListener('submit', function (e) {
-				e.preventDefault(); // Prevent the default form submission
+    .close:hover,
+    .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+    }
+</style>
 
-				var formData = new FormData(this);
-				document.getElementById("loading").style.display = "block";
-
-				fetch("{% url 'upload_file' %}", {
-					method: 'POST',
-					body: formData,
-					headers: {
-						'X-Requested-With': 'XMLHttpRequest'
-					}
-				})
-					.then(response => response.json())
-					.then(data => {
-						if (data.error) {
-							openModal(data.error);
-						} else {
-							openModal(data.prediction);
-						}
-					})
-					.catch(error => {
-						console.error('Error:', error);
-						openModal('An error occurred during file upload.');
-					});
-			});
-		</script>
-	</form>
-	{% endblock content %}
+{% endblock content %}

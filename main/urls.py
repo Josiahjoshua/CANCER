@@ -13,5 +13,6 @@ urlpatterns = [
     path("autosuggest/", views.autosuggest, name="autosuggest"),
     path("autodoctor/", views.autodoctor, name="autodoctor"),
     path("info/", views.info, name="info"),
-    path("upload/", views.upload_file, name="upload"),
+    # path("upload/", views.upload_file, name="upload"),
+    path('upload-and-predict/', views.upload_and_predict, name='upload_and_predict'),
 ]
