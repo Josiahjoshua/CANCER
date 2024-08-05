@@ -1,0 +1,35 @@
+/* static/css/loading.css */
+body, html {
+    height: 100%;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #fff;
+}
+
+#loader {
+    text-align: center;
+}
+
+#logo-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px; /* Adjust height as needed */
+}
+
+#logo {
+    width: 100px; /* Adjust size as needed */
+    height: 100px; /* Adjust size as needed */
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+#content {
+    display: none;
+}

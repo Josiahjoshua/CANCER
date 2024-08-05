@@ -2,10 +2,8 @@ import os
 import cv2
 import pydicom
 import numpy as np
-import tensorflow as tf
 from django.conf import settings
 from .forms import UploadFileForm
-from django.core.files.storage import default_storage
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .utils import handle_uploaded_file, process_and_predict

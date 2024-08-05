@@ -120,8 +120,8 @@
 					<div class="col-md-6">
 						<div class="col-md-6 mx-auto">
 							<br />
-							<button id="uploadModal" class="btn btn-primary">
-								<i class="fa fa-upload"></i> Upload DICOM for Analysis
+							<button id="uploadBtn" class="btn btn-primary">
+								<i class="fa fa-upload"></i> Upload DICOM Image for Analysis
 							</button>
 						</div>
 					</div>
@@ -164,9 +164,10 @@
     <div class="modal-content">
         <span class="close">&times;</span>
         <h2>Upload DICOM for Analysis</h2>
-        <form id="uploadForm" enctype="multipart/form-data">
+		<form id="uploadForm" enctype="multipart/form-data" method="post">
             {% csrf_token %}
-            {{ form.as_p }}
+			{{ form }}
+			<hr>
             <button type="submit" class="btn btn-success">Analyze</button>
         </form>
         <div id="loading" style="display: none;">Analyzing image...</div>
@@ -187,56 +188,60 @@
 </div>
 
 <script>
-    // JavaScript to handle modal functionality and AJAX upload
-    const uploadBtn = document.getElementById('uploadBtn');
-    const uploadModal = document.getElementById('uploadModal');
-    const resultsModal = document.getElementById('resultsModal');
-    const uploadForm = document.getElementById('uploadForm');
-    const loading = document.getElementById('loading');
+    document.addEventListener('DOMContentLoaded', function() {
+        const uploadBtn = document.getElementById('uploadBtn');
+        const uploadModal = document.getElementById('uploadModal');
+        const resultsModal = document.getElementById('resultsModal');
+        const uploadForm = document.getElementById('uploadForm');
+        const loading = document.getElementById('loading');
 
-    uploadBtn.onclick = () => uploadModal.style.display = "block";
+        uploadBtn.onclick = function(event) {
+            event.preventDefault();
+            uploadModal.style.display = "block";
+        };
 
-    document.querySelectorAll('.close').forEach(closeBtn => {
-        closeBtn.onclick = function() {
-            this.closest('.modal').style.display = "none";
-        }
-    });
-
-    window.onclick = (event) => {
-        if (event.target.classList.contains('modal')) {
-            event.target.style.display = "none";
-        }
-    };
-
-    uploadForm.onsubmit = function(e) {
-        e.preventDefault();
-        loading.style.display = "block";
-        
-        fetch("{% url 'upload_and_predict' %}", {
-            method: 'POST',
-            body: new FormData(this),
-        })
-        .then(response => response.json())
-        .then(data => {
-            loading.style.display = "none";
-            uploadModal.style.display = "none";
-            
-            if (data.error) {
-                alert(data.error);
-            } else {
-                document.getElementById('predictedClass').textContent = data.predicted_class;
-                document.getElementById('cancerProbability').textContent = (data.cancer_probability * 100).toFixed(2) + '%';
-                document.getElementById('calcificationType').textContent = data.calcification_type;
-                
-                resultsModal.style.display = "block";
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            loading.style.display = "none";
-            alert('An error occurred during analysis.');
+        document.querySelectorAll('.close').forEach(function(closeBtn) {
+            closeBtn.onclick = function() {
+                this.closest('.modal').style.display = "none";
+            };
         });
-    };
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = "none";
+            }
+        };
+
+        uploadForm.onsubmit = function(e) {
+            e.preventDefault();
+            loading.style.display = "block";
+            
+            fetch("{% url 'upload_and_predict' %}", {
+                method: 'POST',
+                body: new FormData(this),
+            })
+            .then(response => response.json())
+            .then(data => {
+                loading.style.display = "none";
+                uploadModal.style.display = "none";
+                
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    document.getElementById('predictedClass').textContent = data.predicted_class;
+                    document.getElementById('cancerProbability').textContent = (data.cancer_probability * 100).toFixed(2) + '%';
+                    document.getElementById('calcificationType').textContent = data.calcification_type;
+                    
+                    resultsModal.style.display = "block";
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                loading.style.display = "none";
+                alert('An error occurred during analysis.');
+            });
+        };
+    });
 </script>
 
 <style>

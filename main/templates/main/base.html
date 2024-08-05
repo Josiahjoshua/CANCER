@@ -39,6 +39,8 @@
 
     <!-- jquery autocomplete css -->
     <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    
+    <link rel="stylesheet" href="{% static 'css/loading.css' %}">
 
     {% comment %} <link rel="stylesheet" href="{% static 'styles/patient.css' %}"> {% endcomment %}
     
@@ -104,6 +106,12 @@
   </head>
 
   <body>
+
+      <!-- Loading Screen -->
+<div id="loader">
+  <img src="{% static 'images/logo.png' %}" alt="AFYA-AI Logo" id="logo">
+  <p>Loading...</p>
+</div>
 
 <!-- vertical-nav starts here -->
 <div class="vertical-nav" id="sidebar">
@@ -232,6 +240,15 @@
 
     <!-- {% comment %} custom js file {% endcomment %} -->
     <script src="{% static 'scripts/base.js' %}"></script>
+    <script src="{% static 'js/loading.js' %}" defer></script>
     <script src="{% static 'js/form.js' %}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script>
+      $(window).on('load', function() {
+        $('#loader').fadeOut();
+      });
+    </script>
+    
   </body>
 </html>
