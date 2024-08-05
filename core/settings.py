@@ -30,6 +30,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['192.168.4.114','hospital-management-covid19.herokuapp.com', 'localhost', '127.0.0.1', ]
 
+FILE_CHARSET = 'utf-8'
+DEFAULT_CHARSET = 'utf-8'
 
 # Application definition
 

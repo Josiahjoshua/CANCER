@@ -3,7 +3,7 @@ document.getElementById('uploadForm').addEventListener('submit', function(e) {
 
   var formData = new FormData(this);
 
-  fetch("/upload_and_predict/", {
+  fetch("/upload-and-predict/", {
       method: 'POST',
       body: formData,
       headers: {

@@ -6,16 +6,19 @@ from django.conf import settings
 from .forms import UploadFileForm
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from .utils import handle_uploaded_file, process_and_predict
+from .utils import handle_uploaded_file, process_dicom_image
 
 from django.shortcuts import render, redirect
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from .models import Patient, Bed, Doctor
 from .filters import PatientFilter
 from django.contrib.auth.models import User, auth
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from . import AI_Model
+import tensorflow as tf
+from tensorflow.keras.models import load_model
+
+resnetModel = load_model('d:\models\Resnet50_model_cancer-to-be-used-224.keras')
 # PatientFilter = OrderFilter
 
 # model = tf.keras.models.load_model("E:/JOSIAH/AfyaAI_model.h5")
@@ -54,40 +57,45 @@ def upload_and_predict(request):
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
             file = request.FILES['file']
-            
+
             if not file.name.lower().endswith('.dcm'):
                 error_message = 'Invalid file format. Please upload a DICOM file.'
                 return JsonResponse({'error': error_message}, status=400)
 
-            file_path = handle_uploaded_file(file)
-            img_array = process_dicom_image(file_path)
-            
-            if img_array is None:
-                return JsonResponse({'error': 'Error processing the DICOM image'}, status=400)
+            try:
+                file_path = handle_uploaded_file(file)
+                img_array = process_dicom_image(file_path)
 
-            # Make prediction using your model
-            predictions = AI_Model.predict(np.expand_dims(img_array, axis=0))
-            
-            cancer_probability = predictions[0][0]
-            predicted_class = "Cancer" if cancer_probability >= 0.5 else "Normal"
-            
-            # Implement get_calcification_type based on your model's output
-            calcification_type = get_calcification_type(predictions)
-            
-            # Clean up the uploaded file
-            os.remove(file_path)
-            
-            return JsonResponse({
-                'predicted_class': predicted_class,
-                'cancer_probability': float(cancer_probability),
-                'calcification_type': calcification_type
-            })
+                if img_array is None:
+                    return JsonResponse({'error': 'Error processing the DICOM image'}, status=400)
+
+                predictions = resnetModel.predict(np.expand_dims(img_array, axis=0))
+
+                cancer_probability = float(predictions[0][0])  # Convert to Python float
+                predicted_class = "Cancer" if cancer_probability >= 0.5 else "Normal"
+
+                calcification_type = get_calcification_type(predictions)
+
+                os.remove(file_path)
+
+                return JsonResponse({
+                    'predicted_class': predicted_class,
+                    'cancer_probability': cancer_probability,
+                    'calcification_type': calcification_type
+                })
+            except Exception as e:
+                return JsonResponse({'error': str(e)}, status=500)
         else:
             return JsonResponse({'error': 'Invalid form submission'}, status=400)
     else:
-        form = UploadFileForm()
+        return JsonResponse({'error': 'Invalid request method'}, status=400)
     
-    return render(request, 'main/patient.html', {'form': form})
+    
+    # else:
+        # form = UploadFileForm()
+
+    # return render(request, 'main/patient.html', {'form': form})
+    # return JsonResponse({'error': 'Invalid request method'}, status=400)
 
 def get_calcification_type(predictions):
     # Provided calcification types dictionary
@@ -246,6 +254,7 @@ def add_patient(request):
 
 def patient(request, pk):
     patient = Patient.objects.get(id=pk)
+    form = UploadFileForm()
     if request.method == "POST":
         doctor = request.POST['doctor']
         doctor_time = request.POST['doctor_time']
@@ -270,9 +279,7 @@ def patient(request, pk):
         print(patient.doctors_notes)
         patient.status = status
         patient.save()
-    context = {
-        'patient': patient
-    }
+    context = {'patient': patient, 'form': form}
     return render(request, 'main/patient.html', context)
 
 

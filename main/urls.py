@@ -9,10 +9,9 @@ urlpatterns = [
     path("add_patient/", views.add_patient, name="add_patient"),
     path("patient_view/", views.patient_view, name="patient_view"),
     path("patient_list/", views.patient_list, name="patient_list"),
-    path("patient/<str:pk>", views.patient, name="patient"),
+    path("patient/<int:pk>", views.patient, name="patient"),
     path("autosuggest/", views.autosuggest, name="autosuggest"),
     path("autodoctor/", views.autodoctor, name="autodoctor"),
     path("info/", views.info, name="info"),
-    # path("upload/", views.upload_file, name="upload"),
     path('upload-and-predict/', views.upload_and_predict, name='upload_and_predict'),
 ]
