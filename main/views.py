@@ -18,6 +18,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 import tensorflow as tf
 import logging
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
 
 
 resnetModel = tf.keras.models.load_model('d:\models\Resnet50_model_cancer-to-be-used-224.keras')
@@ -46,69 +48,73 @@ def process_dicom_image(file_path):
     try:
         ds = pydicom.dcmread(file_path)
         image = ds.pixel_array
+
+        # Check if image is already 3-channel
+        if len(image.shape) == 3 and image.shape[2] == 3:
+            # Image is already RGB
+            pass
+        elif len(image.shape) == 2:
+            # Normalize pixel values
+            image = (image - np.min(image)) / (np.max(image) - np.min(image))
+            image = (image * 255).astype(np.uint8)
+            
+            # Convert to RGB
+            image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+        else:
+            raise ValueError("Unexpected image shape")
         
-        # Normalize pixel values
-        image = (image - np.min(image)) / (np.max(image) - np.min(image))
-        image = (image * 255).astype(np.uint8)
-        
-        # Resize and convert to RGB
-        image = cv2.resize(image, (224, 224))  # Adjust size as needed
-        image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+        # Resize
+        image = cv2.resize(image, (224, 224))
         
         # Normalize for model input
         image = image / 255.0
         
         return image
     except Exception as e:
-        logger.error(f"Error processing DICOM image: {str(e)}", exc_info=True)  # Log error with traceback
+        logger.error(f"Error processing DICOM image: {str(e)}", exc_info=True)
         return None
 
 @csrf_exempt
 def upload_and_predict(request):
-    if request.method == 'POST':
-        form = UploadFileForm(request.POST, request.FILES)
-        if form.is_valid():
-            file = request.FILES['file']
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Invalid request method'}, status=400)
 
-            if not file.name.lower().endswith('.dcm'):
-                error_message = 'Invalid file format. Please upload a DICOM file.'
-                logger.error(error_message)  # Log error
-                return JsonResponse({'error': error_message}, status=400)
+    form = UploadFileForm(request.POST, request.FILES)
+    if not form.is_valid():
+        return JsonResponse({'error': 'Invalid form submission'}, status=400)
 
-            try:
-                file_path = handle_uploaded_file(file)
-                img_array = process_dicom_image(file_path)
+    file = request.FILES['file']
+    if not file.name.lower().endswith('.dcm'):
+        return JsonResponse({'error': 'Invalid file format. Please upload a DICOM file.'}, status=400)
 
-                if img_array is None:
-                    error_message = 'Error processing the DICOM image'
-                    logger.error(error_message)  # Log error
-                    return JsonResponse({'error': error_message}, status=400)
+    try:
+        file_path = handle_uploaded_file(file)
+        img_array = process_dicom_image(file_path)
 
-                predictions = resnetModel.predict(np.expand_dims(img_array, axis=0))
+        if img_array is None:
+            return JsonResponse({'error': 'Error processing the DICOM image'}, status=400)
 
-                cancer_probability = float(predictions[0][0])  # Convert to Python float
-                predicted_class = "Cancer" if cancer_probability >= 0.5 else "Normal"
+        prediction_result = predict_image(img_array)
+        
+        # Clean up the file after processing
+        default_storage.delete(file_path)
 
-                calcification_type = get_calcification_type(predictions)
+        return JsonResponse(prediction_result)
+    except Exception as e:
+        logger.error(f"Unexpected error: {str(e)}", exc_info=True)
+        return JsonResponse({'error': str(e)}, status=500)
 
-                os.remove(file_path)
+def predict_image(img_array):
+    predictions = resnetModel.predict(np.expand_dims(img_array, axis=0))
+    cancer_probability = float(predictions[0][0])
+    predicted_class = "Cancer" if cancer_probability >= 0.5 else "Normal"
+    calcification_type = get_calcification_type(predictions)
 
-                return JsonResponse({
-                    'predicted_class': predicted_class,
-                    'cancer_probability': cancer_probability,
-                    'calcification_type': calcification_type
-                })
-            except Exception as e:
-                logger.error(f"Unexpected error: {str(e)}", exc_info=True)  # Log error with traceback
-                return JsonResponse({'error': str(e)}, status=500)
-        else:
-            error_message = 'Invalid form submission'
-            logger.error(error_message)  # Log error
-            return JsonResponse({'error': error_message}, status=400)
-    else:
-        error_message = 'Invalid request method'
-        logger.error(error_message)  # Log error
-        return JsonResponse({'error': error_message}, status=400)
+    return {
+        'predicted_class': predicted_class,
+        'cancer_probability': cancer_probability,
+        'calcification_type': calcification_type
+    }
 
 def get_calcification_type(predictions):
     # Provided calcification types dictionary
