@@ -2,12 +2,14 @@ document.getElementById('uploadForm').addEventListener('submit', function(e) {
   e.preventDefault(); // Prevent default form submission
 
   var formData = new FormData(this);
+  var uploadUrl = document.getElementById('uploadForm').getAttribute('data-upload-url');
 
-  fetch("/upload-and-predict/", {
+  fetch(uploadUrl, {
       method: 'POST',
       body: formData,
       headers: {
-          'X-Requested-With': 'XMLHttpRequest'
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRFToken': '{{ csrf_token }}'
       }
   })
   .then(response => response.json())

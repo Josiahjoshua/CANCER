@@ -7,6 +7,7 @@ from .forms import UploadFileForm
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .utils import handle_uploaded_file, process_dicom_image
+from django.urls import reverse
 
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
@@ -16,12 +17,23 @@ from django.contrib.auth.models import User, auth
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 import tensorflow as tf
-from tensorflow.keras.models import load_model
+import logging
 
-resnetModel = load_model('d:\models\Resnet50_model_cancer-to-be-used-224.keras')
+
+resnetModel = tf.keras.models.load_model('d:\models\Resnet50_model_cancer-to-be-used-224.keras')
 # PatientFilter = OrderFilter
 
-# model = tf.keras.models.load_model("E:/JOSIAH/AfyaAI_model.h5")
+
+# Setup logging configuration to use UTF-8 encoding
+# Configure the logger
+logging.basicConfig(level=logging.ERROR,
+                    format='%(asctime)s - %(levelname)s - %(message)s',
+                    handlers=[
+                        logging.StreamHandler()  # Default to console
+                    ])
+
+logger = logging.getLogger(__name__)
+
 
 def handle_uploaded_file(f):
     file_path = os.path.join(settings.MEDIA_ROOT, f.name)
@@ -48,7 +60,7 @@ def process_dicom_image(file_path):
         
         return image
     except Exception as e:
-        print(f"Error processing DICOM image: {str(e)}")
+        logger.error(f"Error processing DICOM image: {str(e)}", exc_info=True)  # Log error with traceback
         return None
 
 @csrf_exempt
@@ -60,6 +72,7 @@ def upload_and_predict(request):
 
             if not file.name.lower().endswith('.dcm'):
                 error_message = 'Invalid file format. Please upload a DICOM file.'
+                logger.error(error_message)  # Log error
                 return JsonResponse({'error': error_message}, status=400)
 
             try:
@@ -67,7 +80,9 @@ def upload_and_predict(request):
                 img_array = process_dicom_image(file_path)
 
                 if img_array is None:
-                    return JsonResponse({'error': 'Error processing the DICOM image'}, status=400)
+                    error_message = 'Error processing the DICOM image'
+                    logger.error(error_message)  # Log error
+                    return JsonResponse({'error': error_message}, status=400)
 
                 predictions = resnetModel.predict(np.expand_dims(img_array, axis=0))
 
@@ -84,18 +99,16 @@ def upload_and_predict(request):
                     'calcification_type': calcification_type
                 })
             except Exception as e:
+                logger.error(f"Unexpected error: {str(e)}", exc_info=True)  # Log error with traceback
                 return JsonResponse({'error': str(e)}, status=500)
         else:
-            return JsonResponse({'error': 'Invalid form submission'}, status=400)
+            error_message = 'Invalid form submission'
+            logger.error(error_message)  # Log error
+            return JsonResponse({'error': error_message}, status=400)
     else:
-        return JsonResponse({'error': 'Invalid request method'}, status=400)
-    
-    
-    # else:
-        # form = UploadFileForm()
-
-    # return render(request, 'main/patient.html', {'form': form})
-    # return JsonResponse({'error': 'Invalid request method'}, status=400)
+        error_message = 'Invalid request method'
+        logger.error(error_message)  # Log error
+        return JsonResponse({'error': error_message}, status=400)
 
 def get_calcification_type(predictions):
     # Provided calcification types dictionary
@@ -279,7 +292,11 @@ def patient(request, pk):
         print(patient.doctors_notes)
         patient.status = status
         patient.save()
-    context = {'patient': patient, 'form': form}
+    context = {
+        'patient': patient,
+        'form': form,
+        'upload_and_predict_url': reverse('upload_and_predict')  # Add this line
+    }
     return render(request, 'main/patient.html', context)
 
 

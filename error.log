@@ -1,0 +1,78 @@
+2024-08-06 16:02:39,602 ERROR Internal Server Error: /upload-and-predict/
+Traceback (most recent call last):
+  File "C:\Users\NKYA\Josiah_projects\CANCER\main\views.py", line 82, in upload_and_predict
+    return JsonResponse({'error': 'Error processing the DICOM image'}, status=400)
+  File "C:\Users\NKYA\Josiah_projects\Venv\afyaAI\lib\site-packages\keras\src\utils\traceback_utils.py", line 122, in error_handler
+    raise e.with_traceback(filtered_tb) from None
+  File "C:\Python\lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 19-38: character maps to <undefined>
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\NKYA\Josiah_projects\Venv\afyaAI\lib\site-packages\django\core\handlers\exception.py", line 47, in inner
+    response = get_response(request)
+  File "C:\Users\NKYA\Josiah_projects\Venv\afyaAI\lib\site-packages\django\core\handlers\base.py", line 181, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\NKYA\Josiah_projects\Venv\afyaAI\lib\site-packages\django\views\decorators\csrf.py", line 54, in wrapped_view
+    return view_func(*args, **kwargs)
+  File "C:\Users\NKYA\Josiah_projects\CANCER\main\views.py", line 97, in upload_and_predict
+    })
+NameError: name 'logger' is not defined
+2024-08-06 16:02:39,637 ERROR Internal Server Error: /upload-and-predict/
+Traceback (most recent call last):
+  File "C:\Users\NKYA\Josiah_projects\CANCER\main\views.py", line 82, in upload_and_predict
+    return JsonResponse({'error': 'Error processing the DICOM image'}, status=400)
+  File "C:\Users\NKYA\Josiah_projects\Venv\afyaAI\lib\site-packages\keras\src\utils\traceback_utils.py", line 122, in error_handler
+    raise e.with_traceback(filtered_tb) from None
+  File "C:\Python\lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 19-38: character maps to <undefined>
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\NKYA\Josiah_projects\Venv\afyaAI\lib\site-packages\django\core\handlers\exception.py", line 47, in inner
+    response = get_response(request)
+  File "C:\Users\NKYA\Josiah_projects\Venv\afyaAI\lib\site-packages\django\core\handlers\base.py", line 181, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\NKYA\Josiah_projects\Venv\afyaAI\lib\site-packages\django\views\decorators\csrf.py", line 54, in wrapped_view
+    return view_func(*args, **kwargs)
+  File "C:\Users\NKYA\Josiah_projects\CANCER\main\views.py", line 97, in upload_and_predict
+    })
+NameError: name 'logger' is not defined
+2024-08-06 16:02:39,641 ERROR Internal Server Error: /upload-and-predict/
+Traceback (most recent call last):
+  File "C:\Users\NKYA\Josiah_projects\CANCER\main\views.py", line 82, in upload_and_predict
+    return JsonResponse({'error': 'Error processing the DICOM image'}, status=400)
+  File "C:\Users\NKYA\Josiah_projects\Venv\afyaAI\lib\site-packages\keras\src\utils\traceback_utils.py", line 122, in error_handler
+    raise e.with_traceback(filtered_tb) from None
+  File "C:\Python\lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 19-38: character maps to <undefined>
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\NKYA\Josiah_projects\Venv\afyaAI\lib\site-packages\django\core\handlers\exception.py", line 47, in inner
+    response = get_response(request)
+  File "C:\Users\NKYA\Josiah_projects\Venv\afyaAI\lib\site-packages\django\core\handlers\base.py", line 181, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\NKYA\Josiah_projects\Venv\afyaAI\lib\site-packages\django\views\decorators\csrf.py", line 54, in wrapped_view
+    return view_func(*args, **kwargs)
+  File "C:\Users\NKYA\Josiah_projects\CANCER\main\views.py", line 97, in upload_and_predict
+    })
+NameError: name 'logger' is not defined
+2024-08-06 16:02:39,647 ERROR "POST /upload-and-predict/ HTTP/1.1" 500 90643
+2024-08-06 16:02:39,652 ERROR "POST /upload-and-predict/ HTTP/1.1" 500 90934
+2024-08-06 16:02:39,656 ERROR "POST /upload-and-predict/ HTTP/1.1" 500 90934
+2024-08-06 16:08:34,904 ERROR Error in upload_and_predict view: 'charmap' codec can't encode characters in position 19-38: character maps to <undefined>
+2024-08-06 16:08:34,910 ERROR Internal Server Error: /upload-and-predict/
+2024-08-06 16:08:34,912 ERROR "POST /upload-and-predict/ HTTP/1.1" 500 34
+2024-08-06 16:08:34,921 ERROR Error in upload_and_predict view: 'charmap' codec can't encode characters in position 19-38: character maps to <undefined>
+2024-08-06 16:08:34,926 ERROR Internal Server Error: /upload-and-predict/
+2024-08-06 16:08:34,927 ERROR "POST /upload-and-predict/ HTTP/1.1" 500 34
+2024-08-06 16:08:34,951 ERROR Error in upload_and_predict view: 'charmap' codec can't encode characters in position 19-38: character maps to <undefined>
+2024-08-06 16:08:34,975 ERROR Internal Server Error: /upload-and-predict/
+2024-08-06 16:08:34,976 ERROR "POST /upload-and-predict/ HTTP/1.1" 500 34
