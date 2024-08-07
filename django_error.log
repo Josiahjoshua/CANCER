@@ -85,3 +85,23 @@ Internal Server Error: /upload-and-predict/
 "POST /upload-and-predict/ HTTP/1.1" 500 34
 Internal Server Error: /upload-and-predict/
 "POST /upload-and-predict/ HTTP/1.1" 500 34
+Internal Server Error: /upload-and-predict/
+Internal Server Error: /upload-and-predict/
+Internal Server Error: /upload-and-predict/
+"POST /upload-and-predict/ HTTP/1.1" 500 55
+"POST /upload-and-predict/ HTTP/1.1" 500 55
+"POST /upload-and-predict/ HTTP/1.1" 500 55
+Internal Server Error: /upload-and-predict/
+Internal Server Error: /upload-and-predict/
+Internal Server Error: /upload-and-predict/
+"POST /upload-and-predict/ HTTP/1.1" 500 55
+"POST /upload-and-predict/ HTTP/1.1" 500 55
+"POST /upload-and-predict/ HTTP/1.1" 500 55
+Internal Server Error: /upload-and-predict/
+Internal Server Error: /upload-and-predict/
+"POST /upload-and-predict/ HTTP/1.1" 500 53
+"POST /upload-and-predict/ HTTP/1.1" 500 53
+Internal Server Error: /upload-and-predict/
+"POST /upload-and-predict/ HTTP/1.1" 500 53
+Internal Server Error: /upload-and-predict/
+"POST /upload-and-predict/ HTTP/1.1" 500 124

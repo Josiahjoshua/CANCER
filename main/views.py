@@ -22,7 +22,7 @@ from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 
 
-resnetModel = tf.keras.models.load_model('d:\models\Resnet50_model_cancer-to-be-used-224.keras')
+resnetModel = tf.keras.models.load_model("G:\models\AfyaAI_model-vgg-to-be-used-50.h5")
 # PatientFilter = OrderFilter
 
 
@@ -64,7 +64,7 @@ def process_dicom_image(file_path):
             raise ValueError("Unexpected image shape")
         
         # Resize
-        image = cv2.resize(image, (224, 224))
+        image = cv2.resize(image, (50, 50))
         
         # Normalize for model input
         image = image / 255.0
@@ -108,6 +108,7 @@ def predict_image(img_array):
     predictions = resnetModel.predict(np.expand_dims(img_array, axis=0))
     cancer_probability = float(predictions[0][0])
     predicted_class = "Cancer" if cancer_probability >= 0.5 else "Normal"
+    print(predictions)
     calcification_type = get_calcification_type(predictions)
 
     return {
@@ -169,6 +170,9 @@ def get_calcification_type(predictions):
     
     # Assuming predictions[0] contains the model's output probabilities
     # Find the index of the highest probability
+    if predictions.size == 0:
+        return 'No predictions made'
+
     calcification_index = np.argmax(predictions[0][1:])
     
     # Return the corresponding calcification type from the dictionary
